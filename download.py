@@ -157,10 +157,6 @@ def download_files_for_user(username, password, output):
     activities(agent, download_folder)
 
 def main():
-    folder_execute = os.path.dirname(sys.executable)
-    if folder_execute.endswith('/Contents/MacOS'):
-        os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(folder_execute))))
-
     parser = argparse.ArgumentParser(description = 'Garmin Data Scraper',
         epilog = 'Because the hell with APIs!', add_help = 'How to use',
         prog = 'download.py -u <user> -c <csv fife with credentials> -o <output dir>')
