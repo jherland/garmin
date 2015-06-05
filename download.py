@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 """
 This script was inspired from tmcw's Ruby script doing the same thing:
 
@@ -161,7 +162,7 @@ if folder_execute.endswith('/Contents/MacOS'):
 
 parser = argparse.ArgumentParser(description = 'Garmin Data Scraper',
     epilog = 'Because the hell with APIs!', add_help = 'How to use',
-    prog = 'python download.py -u <user> -c <csv fife with credentials> -o <output dir>')
+    prog = 'download.py -u <user> -c <csv fife with credentials> -o <output dir>')
 parser.add_argument('-u', '--user', required = False,
     help = 'Garmin username. This will NOT be saved!')
 parser.add_argument('-c', '--csv', required=False,
