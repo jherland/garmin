@@ -18,7 +18,7 @@ to be determined.
 import argparse
 from getpass import getpass
 import json
-import mechanize as me
+import mechanize
 import os
 import re
 import shutil
@@ -143,7 +143,7 @@ def activities(agent, outdir, increment = 100):
 
 def download_files_for_user(username, password, output):
     # Create the agent and log in.
-    agent = me.Browser()
+    agent = mechanize.Browser()
     login(agent, username, password)
 
     user_output = os.path.join(output, username)
