@@ -170,8 +170,7 @@ def main():
         '-c', '--csv', required=False, default='credentials.csv',
         help='CSV file with username/password pairs (comma separated).')
     parser.add_argument(
-        '-o', '--output', required=False,
-        default=os.path.join(os.getcwd(), 'Results/'),
+        '-o', '--output', required=False, default='.',
         help='Output directory.')
 
     args = vars(parser.parse_args())
