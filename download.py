@@ -157,16 +157,20 @@ def download_files_for_user(username, password, output):
     activities(agent, download_folder)
 
 def main():
-    parser = argparse.ArgumentParser(description = 'Garmin Data Scraper',
-        epilog = 'Because the hell with APIs!', add_help = 'How to use',
-        prog = 'download.py -u <user> -c <csv fife with credentials> -o <output dir>')
-    parser.add_argument('-u', '--user', required = False,
-        help = 'Garmin username. This will NOT be saved!')
-    parser.add_argument('-c', '--csv', required=False,
-        help = 'CSV file with username and password (comma separated).',
-        default = os.path.join(os.getcwd(), 'credentials.csv'))
-    parser.add_argument('-o', '--output', required = False,
-        help = 'Output directory.', default=os.path.join(os.getcwd(), 'Results/'))
+    parser = argparse.ArgumentParser(
+        description='Garmin Data Scraper',
+        epilog='Because the hell with APIs!')
+    parser.add_argument(
+        '-u', '--user', required=False,
+        help='Garmin username. This will NOT be saved!')
+    parser.add_argument(
+        '-c', '--csv', required=False,
+        default=os.path.join(os.getcwd(), 'credentials.csv'),
+        help='CSV file with username and password (comma separated).')
+    parser.add_argument(
+        '-o', '--output', required=False,
+        default=os.path.join(os.getcwd(), 'Results/'),
+        help='Output directory.')
 
     args = vars(parser.parse_args())
     # Try to use the user argument from command line
