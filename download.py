@@ -167,9 +167,8 @@ def main():
         '-u', '--user', required=False,
         help='Garmin username. This will NOT be saved!')
     parser.add_argument(
-        '-c', '--csv', required=False,
-        default=os.path.join(os.getcwd(), 'credentials.csv'),
-        help='CSV file with username and password (comma separated).')
+        '-c', '--csv', required=False, default='credentials.csv',
+        help='CSV file with username/password pairs (comma separated).')
     parser.add_argument(
         '-o', '--output', required=False,
         default=os.path.join(os.getcwd(), 'Results/'),
