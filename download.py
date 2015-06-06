@@ -119,8 +119,8 @@ def activities(agent, outdir, increment = 100):
             activityId = item['activity']['activityId']
             url = TCX % activityId
             file_name = '{}_{}.txt'.format(username, activityId)
-            if file_exists_in_folder(file_name, output):
-                print('{} already exists in {}. Skipping.'.format(file_name, output))
+            if file_exists_in_folder(file_name, outdir):
+                print('{} already exists in {}. Skipping.'.format(file_name, outdir))
                 continue
             print('{} is downloading...'.format(file_name))
             datafile = agent.open(url).get_data()
