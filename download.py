@@ -173,30 +173,27 @@ def main():
         '-o', '--output', required=False, default='.',
         help='Output directory.')
 
-    args = vars(parser.parse_args())
-    # Try to use the user argument from command line
-    output = args['output']
+    args = parser.parse_args()
 
-    if args['user'] is not None:
+    # Try to use the user argument from command line
+    if args.user is not None:
         password = getpass('Garmin account password (NOT saved): ')
-        username = args['user']
-        download_files_for_user(username, password, output)
+        username = args.user
+        download_files_for_user(username, password, args.output)
 
     # Try to use csv argument from command line
-
-    if args['csv'] is not None:
-        csv_file_path = args['csv']
-        if not os.path.exists(csv_file_path):
+    if args.csv is not None:
+        if not os.path.exists(args.csv):
             print("CSV file doesn't exist")
             sys.exit()
         else:
-            with open(csv_file_path, 'r') as f:
+            with open(args.csv, 'r') as f:
                 for line in f:
                     try:
                         if ',' in line:
                             username, password = (line.strip().split(','))
                             print('Downloading files for user {}'.format(username))
-                            download_files_for_user(username, password, output)
+                            download_files_for_user(username, password, args.output)
                     except IndexError:
                         raise Exception('Wrong line in CSV file. Please check the line {}'.format(line))
 
