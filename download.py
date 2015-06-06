@@ -164,10 +164,7 @@ def main():
         description='Garmin Data Scraper',
         epilog='Because the hell with APIs!')
     parser.add_argument(
-        '-u', '--user', required=False,
-        help='Garmin username. This will NOT be saved!')
-    parser.add_argument(
-        '-c', '--csv', required=False, default='credentials.csv',
+        '-c', '--csv', required=False,
         help='CSV file with username/password pairs (comma separated).')
     parser.add_argument(
         '-o', '--output', required=False, default='.',
@@ -175,14 +172,14 @@ def main():
 
     args = parser.parse_args()
 
-    # Try to use the user argument from command line
-    if args.user is not None:
-        password = getpass('Garmin account password (NOT saved): ')
-        username = args.user
+    if not args.csv:
+        # Ask for username/password interactively
+        print("Please fill in your Garmin account credentials (NOT saved).")
+        username = raw_input('Username: ')
+        password = getpass('Password: ')
         download_files_for_user(username, password, args.output)
-
-    # Try to use csv argument from command line
-    if args.csv is not None:
+    else:
+        # Retrieve username/password pairs from CSV file
         if not os.path.exists(args.csv):
             print("CSV file doesn't exist")
             sys.exit()
