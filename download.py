@@ -114,7 +114,9 @@ class GarminScraper(object):
 
         # In theory, we're in.
 
-    def activities(self, outdir, increment=100):
+    def activities(self, outdir, increment=100, limit=None):
+        if limit and increment > limit:
+            increment = limit
         currentIndex = 0
         initUrl = self.ACTIVITIES % (currentIndex, increment)  # 100 activities seems a nice round number
         try:
@@ -124,6 +126,8 @@ class GarminScraper(object):
             return
         search = json.loads(response.get_data())
         totalActivities = int(search['results']['totalFound'])
+        if limit and limit < totalActivities:
+            totalActivities = limit
         while True:
             for item in search['results']['activities']:
                 # Read this list of activities and save the files.
