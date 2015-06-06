@@ -17,7 +17,6 @@ to be determined.
 
 from __future__ import print_function
 
-from getpass import getpass
 import json
 import mechanize
 import os
@@ -158,40 +157,44 @@ def download_files_for_user(username, password, output):
     # Scrape all the activities.
     activities(agent, download_folder)
 
+
+def credentials_from_prompt():
+    import getpass
+    print("Please fill in your Garmin account credentials (NOT saved).")
+    yield raw_input('Username: '), getpass.getpass('Password: ')
+
+
+def credentials_from_file(f):
+    for line in f:
+        try:
+            username, password = line.split(',')
+            yield username.strip(), password.strip()
+        except ValueError:
+            print('Skipping malformed line "{}"'.format(line.strip()))
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(
         description='Garmin Data Scraper',
         epilog='Because the hell with APIs!')
     parser.add_argument(
-        '-c', '--csv', required=False,
+        '-c', '--csv', required=False, type=argparse.FileType('r'),
         help='CSV file with username/password pairs (comma separated).')
     parser.add_argument(
         '-o', '--output', required=False, default='.',
         help='Output directory.')
     args = parser.parse_args()
 
-    if not args.csv:
-        # Ask for username/password interactively
-        print("Please fill in your Garmin account credentials (NOT saved).")
-        username = raw_input('Username: ')
-        password = getpass('Password: ')
-        download_files_for_user(username, password, args.output)
+    if args.csv:
+        credentials = credentials_from_file(args.csv)
     else:
-        # Retrieve username/password pairs from CSV file
-        if not os.path.exists(args.csv):
-            print("CSV file doesn't exist")
-            sys.exit()
-        else:
-            with open(args.csv, 'r') as f:
-                for line in f:
-                    try:
-                        if ',' in line:
-                            username, password = (line.strip().split(','))
-                            print('Downloading files for user {}'.format(username))
-                            download_files_for_user(username, password, args.output)
-                    except IndexError:
-                        raise Exception('Wrong line in CSV file. Please check the line {}'.format(line))
+        credentials = credentials_from_prompt()
+
+    for username, password in credentials:
+        print('Downloading files from {}\'s Garmin account'.format(username))
+        download_files_for_user(username, password, args.output)
+
 
 if __name__ == '__main__':
     main()
