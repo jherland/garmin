@@ -145,7 +145,7 @@ class GarminScraper(object):
                 f.close()
                 shutil.copy(file_path, os.path.join(os.path.dirname(os.path.dirname(file_path)), file_name))
 
-            if (currentIndex + increment) > totalActivities:
+            if (currentIndex + increment) >= totalActivities:
                 # All done!
                 break
 
