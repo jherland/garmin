@@ -17,7 +17,6 @@ to be determined.
 
 from __future__ import print_function
 
-import argparse
 from getpass import getpass
 import json
 import mechanize
@@ -160,6 +159,7 @@ def download_files_for_user(username, password, output):
     activities(agent, download_folder)
 
 def main():
+    import argparse
     parser = argparse.ArgumentParser(
         description='Garmin Data Scraper',
         epilog='Because the hell with APIs!')
@@ -169,7 +169,6 @@ def main():
     parser.add_argument(
         '-o', '--output', required=False, default='.',
         help='Output directory.')
-
     args = parser.parse_args()
 
     if not args.csv:
