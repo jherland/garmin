@@ -33,9 +33,11 @@ SSO = "https://sso.garmin.com/sso"
 CSS = "https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.1-min.css"
 REDIRECT = "https://connect.garmin.com/post-auth/login"
 ACTIVITIES = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start=%s&limit=%s"
+ORIG_ZIP = "https://connect.garmin.com/proxy/download-service/files/activity/%s"
 TCX = "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/%s?full=true"
 GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/%s?full=true"
 KML = "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/%s?full=true"
+SPLITS_CSV = "https://connect.garmin.com/csvExporter/%s.csv"
 
 def login(agent, username, password):
     global BASE_URL, GAUTH, REDIRECT, SSO, CSS
