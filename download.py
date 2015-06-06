@@ -15,6 +15,8 @@ all the data into a single file, filter by workout type, and other features
 to be determined.
 """
 
+from __future__ import print_function
+
 import argparse
 from getpass import getpass
 import json
@@ -85,7 +87,7 @@ def login(agent, username, password):
     if res.get_data().find("Invalid") >= 0:
         quit("Login failed! Check your credentials, or submit a bug report.")
     elif res.get_data().find("SUCCESS") >= 0:
-        print 'Login successful! Proceeding...'
+        print('Login successful! Proceeding...')
     else:
         quit('UNKNOWN STATE. This script may need to be updated. Submit a bug report.')
 
@@ -116,7 +118,6 @@ def activities(agent, outdir, increment = 100):
     while True:
         for item in search['results']['activities']:
             # Read this list of activities and save the files.
-            # print '.'
             activityId = item['activity']['activityId']
             url = TCX % activityId
             file_name = '{}_{}.txt'.format(username, activityId)
@@ -194,7 +195,7 @@ def main():
                     try:
                         if ',' in line:
                             username, password = (line.strip().split(','))
-                            print 'Downloading files for user {}'.format(username)
+                            print('Downloading files for user {}'.format(username))
                             download_files_for_user(username, password, output)
                     except IndexError:
                         raise Exception('Wrong line in CSV file. Please check the line {}'.format(line))
