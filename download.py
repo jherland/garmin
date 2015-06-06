@@ -22,7 +22,6 @@ import mechanize
 import os
 import re
 import shutil
-import sys
 import urllib
 
 BASE_URL = "http://connect.garmin.com/en-US/signin"
@@ -37,6 +36,7 @@ GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/%s?ful
 KML = "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/%s?full=true"
 SPLITS_CSV = "https://connect.garmin.com/csvExporter/%s.csv"
 
+
 def login(agent, username, password):
     global BASE_URL, GAUTH, REDIRECT, SSO, CSS
 
@@ -49,7 +49,8 @@ def login(agent, username, password):
     hostname = json.loads(hostname_url.get_data())['host']
 
     # Package the full login GET request...
-    data = {'service': REDIRECT,
+    data = {
+        'service': REDIRECT,
         'webhost': hostname,
         'source': BASE_URL,
         'redirectAfterAccountLoginUrl': REDIRECT,
@@ -68,14 +69,15 @@ def login(agent, username, password):
         'consumeServiceTicket': 'false',
         'initialFocus': 'true',
         'embedWidget': 'false',
-        'generateExtraServiceTicket': 'false'}
+        'generateExtraServiceTicket': 'false',
+    }
 
     # ...and officially say "hello" to Garmin Connect.
     login_url = 'https://sso.garmin.com/sso/login?%s' % urllib.urlencode(data)
     agent.open(login_url)
 
     # Set up the login form.
-    agent.select_form(predicate = lambda f: 'id' in f.attrs and f.attrs['id'] == 'login-form')
+    agent.select_form(predicate=lambda f: 'id' in f.attrs and f.attrs['id'] == 'login-form')
     agent['username'] = username
     agent['password'] = password
     agent.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2'), ]
@@ -91,20 +93,22 @@ def login(agent, username, password):
     else:
         quit('UNKNOWN STATE. This script may need to be updated. Submit a bug report.')
 
-    # Now we need a very specific URL from the respose.
+    # Now we need a very specific URL from the response.
     response_url = re.search("response_url\s*=\s*'(.*)';", res.get_data()).groups()[0]
     agent.open(response_url)
 
     # In theory, we're in.
 
+
 def file_exists_in_folder(filename, folder):
-    "Check if the file exists in folder of any subfolder"
+    "Check if the file exists in folder or any subfolder"
     for _, _, files in os.walk(folder):
         if filename in files:
             return True
     return False
 
-def activities(agent, outdir, increment = 100):
+
+def activities(agent, outdir, increment=100):
     global ACTIVITIES
     currentIndex = 0
     initUrl = ACTIVITIES % (currentIndex, increment)  # 100 activities seems a nice round number
@@ -141,6 +145,7 @@ def activities(agent, outdir, increment = 100):
         url = ACTIVITIES % (currentIndex, increment)
         response = agent.open(url)
         search = json.loads(response.get_data())
+
 
 def download_files_for_user(username, password, output):
     # Create the agent and log in.
