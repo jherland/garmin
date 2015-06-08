@@ -102,22 +102,6 @@ class GarminScraper(object):
             f.write(self.agent.open(url).get_data())
 
 
-def download_files_for_user(username, password, output):
-    gs = GarminScraper(username)
-    gs.login(password)
-
-    download_folder = os.path.join(output, username)
-
-    # Create output directory (if it does not already exist).
-    if not os.path.exists(download_folder):
-        os.makedirs(download_folder)
-
-    # Scrape all the activities.
-    for activity in gs.activities():
-        activity_id = activity['activityId']
-        gs.download_tcx(activity_id, download_folder)
-
-
 def credentials_from_prompt():
     import getpass
     print("Please fill in your Garmin account credentials (NOT saved).")
@@ -152,8 +136,19 @@ def main():
         credentials = credentials_from_prompt()
 
     for username, password in credentials:
-        print('Downloading files from {}\'s Garmin account'.format(username))
-        download_files_for_user(username, password, args.output)
+        download_dir = os.path.join(args.output, username)
+        print('Downloading from {}\'s Garmin account into {}/...'.format(
+            username, download_dir))
+
+        gs = GarminScraper(username)
+        gs.login(password)
+
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
+
+        for activity in gs.activities():
+            activity_id = activity['activityId']
+            gs.download_tcx(activity_id, download_dir)
 
 
 if __name__ == '__main__':
