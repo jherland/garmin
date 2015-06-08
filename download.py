@@ -24,14 +24,6 @@ import re
 import urllib
 
 
-def file_exists_in_folder(filename, folder):
-    "Check if the file exists in folder or any subfolder"
-    for _, _, files in os.walk(folder):
-        if filename in files:
-            return True
-    return False
-
-
 class GarminScraper(object):
 
     def __init__(self, username):
@@ -101,13 +93,12 @@ class GarminScraper(object):
         SPLITS_CSV = "https://connect.garmin.com/csvExporter/{}.csv"
 
         url = TCX.format(activity_id)
-        file_name = '{}.tcx'.format(activity_id)
-        if file_exists_in_folder(file_name, outdir):
-            print('{} already exists in {}. Skipping.'.format(file_name, outdir))
+        path = os.path.join(outdir, '{}.tcx'.format(activity_id))
+        if os.path.exists(path):
+            print('Skipping {} (already exists)...'.format(path))
             return
-        print('{} is downloading...'.format(file_name))
-        file_path = os.path.join(outdir, file_name)
-        with file(file_path, "w") as f:
+        print('Downloading {}...'.format(path))
+        with file(path, "w") as f:
             f.write(self.agent.open(url).get_data())
 
 
