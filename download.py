@@ -68,7 +68,10 @@ class GarminScraper(object):
         # In theory, we're in.
 
     def activities(self, limit=None):
-        """Generate activities in reverse chronological order."""
+        """Generate activities in reverse chronological order.
+
+        Yields 'raw' activity dicts parsed from the JSON retrieved from the
+        server."""
         activities_url = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start={start}&limit={limit}"
 
         batch_size = 100  # Max #activities to retrieve per request.
