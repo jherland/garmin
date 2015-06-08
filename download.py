@@ -101,7 +101,7 @@ class GarminScraper(object):
         SPLITS_CSV = "https://connect.garmin.com/csvExporter/{}.csv"
 
         url = TCX.format(activity_id)
-        file_name = '{}_{}.txt'.format(self.username, activity_id)
+        file_name = '{}.tcx'.format(activity_id)
         if file_exists_in_folder(file_name, outdir):
             print('{} already exists in {}. Skipping.'.format(file_name, outdir))
             return
