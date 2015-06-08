@@ -35,12 +35,6 @@ def file_exists_in_folder(filename, folder):
 
 class GarminScraper(object):
 
-    ORIG_ZIP = "https://connect.garmin.com/proxy/download-service/files/activity/%s"
-    TCX = "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/%s?full=true"
-    GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/%s?full=true"
-    KML = "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/%s?full=true"
-    SPLITS_CSV = "https://connect.garmin.com/csvExporter/%s.csv"
-
     def __init__(self, username):
         self.username = username
         self.agent = mechanize.Browser()
@@ -82,48 +76,41 @@ class GarminScraper(object):
 
         # In theory, we're in.
 
-    def activities(self, outdir, increment=100, limit=None):
-        activities_url = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start=%s&limit=%s"
+    def activities(self, limit=None):
+        """Generate activities in reverse chronological order."""
+        activities_url = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start={start}&limit={limit}"
 
-        if limit and increment > limit:
-            increment = limit
-        currentIndex = 0
-        initUrl = activities_url % (currentIndex, increment)  # 100 activities seems a nice round number
-        try:
-            response = self.agent.open(initUrl)
-        except:
-            print('Wrong credentials for user {}. Skipping.'.format(self.username))
-            return
-        search = json.loads(response.get_data())
-        totalActivities = int(search['results']['totalFound'])
-        if limit and limit < totalActivities:
-            totalActivities = limit
-        while True:
-            for item in search['results']['activities']:
-                # Read this list of activities and save the files.
-                activityId = item['activity']['activityId']
-                url = self.TCX % activityId
-                file_name = '{}_{}.txt'.format(self.username, activityId)
-                if file_exists_in_folder(file_name, outdir):
-                    print('{} already exists in {}. Skipping.'.format(file_name, outdir))
-                    continue
-                print('{} is downloading...'.format(file_name))
-                datafile = self.agent.open(url).get_data()
-                file_path = os.path.join(outdir, file_name)
-                f = open(file_path, "w")
-                f.write(datafile)
-                f.close()
-                shutil.copy(file_path, os.path.join(os.path.dirname(os.path.dirname(file_path)), file_name))
-
-            if (currentIndex + increment) >= totalActivities:
-                # All done!
+        batch_size = 100  # Max #activities to retrieve per request.
+        i = 0
+        while limit is None or i < limit:
+            if limit is not None:
+                batch_size = min(batch_size, limit - i)
+            url = activities_url.format(start=i, limit=batch_size)
+            response = json.loads(self.agent.open(url).get_data())
+            total_activities = response['results']['totalFound']
+            for item in response['results']['activities']:
+                yield item['activity']
+                i += 1
+            if i >= total_activities:
                 break
 
-            # We still have at least 1 activity.
-            currentIndex += increment
-            url = activities_url % (currentIndex, increment)
-            response = self.agent.open(url)
-            search = json.loads(response.get_data())
+    def download_tcx(self, activity_id, outdir):
+        ORIG_ZIP = "https://connect.garmin.com/proxy/download-service/files/activity/{}"
+        TCX = "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/{}?full=true"
+        GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/{}?full=true"
+        KML = "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/{}?full=true"
+        SPLITS_CSV = "https://connect.garmin.com/csvExporter/{}.csv"
+
+        url = TCX.format(activity_id)
+        file_name = '{}_{}.txt'.format(self.username, activity_id)
+        if file_exists_in_folder(file_name, outdir):
+            print('{} already exists in {}. Skipping.'.format(file_name, outdir))
+            return
+        print('{} is downloading...'.format(file_name))
+        file_path = os.path.join(outdir, file_name)
+        with file(file_path, "w") as f:
+            f.write(self.agent.open(url).get_data())
+        shutil.copy(file_path, os.path.join(os.path.dirname(os.path.dirname(file_path)), file_name))
 
 
 def download_files_for_user(username, password, output):
@@ -138,7 +125,9 @@ def download_files_for_user(username, password, output):
         os.makedirs(download_folder)
 
     # Scrape all the activities.
-    gs.activities(download_folder)
+    for activity in gs.activities():
+        activity_id = activity['activityId']
+        gs.download_tcx(activity_id, download_folder)
 
 
 def credentials_from_prompt():
