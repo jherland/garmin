@@ -52,64 +52,32 @@ class GarminScraper(object):
         ]
 
     def login(self, password):
-        base_url = "http://connect.garmin.com/en-US/signin"
-        gauth_url = "http://connect.garmin.com/gauth/hostname"
-        sso_url = "https://sso.garmin.com/sso"
-        css_url = "https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.1-min.css"
-        redirect_url = "https://connect.garmin.com/post-auth/login"
-
-        # First establish contact with Garmin and decipher the local host.
-        page = self.agent.open(base_url)
-        pattern = "\"\S+sso\.garmin\.com\S+\""
-        script_url = re.search(pattern, page.get_data()).group()[1:-1]
-        self.agent.open(script_url)
-        hostname_url = self.agent.open(gauth_url)
-        hostname = json.loads(hostname_url.get_data())['host']
-
-        # Package the full login GET request...
-        data = {
-            'service': redirect_url,
-            'webhost': hostname,
-            'source': base_url,
-            'redirectAfterAccountLoginUrl': redirect_url,
-            'redirectAfterAccountCreationUrl': redirect_url,
-            'gauthHost': sso_url,
-            'locale': 'en_US',
-            'id': 'gauth-widget',
-            'cssUrl': css_url,
-            'clientId': 'GarminConnect',
-            'rememberMeShown': 'true',
-            'rememberMeChecked': 'false',
-            'createAccountShown': 'true',
-            'openCreateAccount': 'false',
-            'usernameShown': 'false',
-            'displayNameShown': 'false',
-            'consumeServiceTicket': 'false',
-            'initialFocus': 'true',
-            'embedWidget': 'false',
-            'generateExtraServiceTicket': 'false',
-        }
-
-        # ...and officially say "hello" to Garmin Connect.
-        login_url = 'https://sso.garmin.com/sso/login?%s' % urllib.urlencode(data)
-        self.agent.open(login_url)
+        """Perform the Garmin Connect login protocol."""
+        # Say "hello" to Garmin Connect.
+        self.agent.open(
+            'https://sso.garmin.com/sso/login?' +
+            urllib.urlencode({
+                'service': "https://connect.garmin.com/post-auth/login",
+                'clientId': 'GarminConnect',
+            }))
 
         # Set up the login form.
-        self.agent.select_form(predicate=lambda f: 'id' in f.attrs and f.attrs['id'] == 'login-form')
+        self.agent.select_form(
+            predicate=lambda f: f.attrs.get('id') == 'login-form')
         self.agent['username'] = self.username
         self.agent['password'] = password
 
         # Submit the login!
-        res = self.agent.submit()
-        if res.get_data().find("Invalid") >= 0:
-            quit("Login failed! Check your credentials, or submit a bug report.")
-        elif res.get_data().find("SUCCESS") >= 0:
+        response = self.agent.submit().get_data()
+        if 'Invalid' in response:
+            raise RuntimeError('Login failed! Check your credentials, or submit a bug report.')
+        elif 'SUCCESS' in response:
             print('Login successful! Proceeding...')
         else:
-            quit('UNKNOWN STATE. This script may need to be updated. Submit a bug report.')
+            raise RuntimeError('UNKNOWN STATE. This script may need to be updated. Submit a bug report.')
 
         # Now we need a very specific URL from the response.
-        response_url = re.search("response_url\s*=\s*'(.*)';", res.get_data()).groups()[0]
+        response_url = re.search("response_url\s*=\s*'(.*)';", response).group(1)
         self.agent.open(response_url)
 
         # In theory, we're in.
