@@ -21,7 +21,6 @@ import json
 import mechanize
 import os
 import re
-import shutil
 import urllib
 
 
@@ -110,15 +109,13 @@ class GarminScraper(object):
         file_path = os.path.join(outdir, file_name)
         with file(file_path, "w") as f:
             f.write(self.agent.open(url).get_data())
-        shutil.copy(file_path, os.path.join(os.path.dirname(os.path.dirname(file_path)), file_name))
 
 
 def download_files_for_user(username, password, output):
     gs = GarminScraper(username)
     gs.login(password)
 
-    user_output = os.path.join(output, username)
-    download_folder = os.path.join(user_output, 'Historical')
+    download_folder = os.path.join(output, username)
 
     # Create output directory (if it does not already exist).
     if not os.path.exists(download_folder):
