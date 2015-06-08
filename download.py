@@ -88,21 +88,26 @@ class GarminScraper(object):
             if i >= total_activities:
                 break
 
-    def download_tcx(self, activity_id, outdir):
-        ORIG_ZIP = "https://connect.garmin.com/proxy/download-service/files/activity/{}"
-        TCX = "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/{}?full=true"
-        GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/{}?full=true"
-        KML = "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/{}?full=true"
-        SPLITS_CSV = "https://connect.garmin.com/csvExporter/{}.csv"
+    FileType = {
+        'json': lambda a: json.dumps(a, sort_keys=True),
+        'orig.zip': "https://connect.garmin.com/proxy/download-service/files/activity/{activityId}",
+        'tcx': "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/{activityId}?full=true",
+        'gpx': "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/{activityId}?full=true",
+        'kml': "https://connect.garmin.com/proxy/activity-service-1.0/kml/activity/{activityId}?full=true",
+        'csv': "https://connect.garmin.com/csvExporter/{activityId}.csv",
+    }
 
-        url = TCX.format(activity_id)
-        path = os.path.join(outdir, '{}.tcx'.format(activity_id))
-        if os.path.exists(path):
-            print('Skipping {} (already exists)...'.format(path))
-            return
-        print('Downloading {}...'.format(path))
-        with file(path, "w") as f:
-            f.write(self.agent.open(url).get_data())
+    def download(self, activity, filetype):
+        handler = self.FileType[filetype]
+        if callable(handler):
+            return handler(activity)
+        else:
+            return self.agent.open(handler.format(**activity)).get_data()
+
+    @classmethod
+    def filename(cls, activity, filetype):
+        assert filetype in cls.FileType
+        return '{}.{}'.format(activity['activityId'], filetype)
 
 
 def credentials_from_prompt():
@@ -150,8 +155,14 @@ def main():
             os.makedirs(download_dir)
 
         for activity in gs.activities():
-            activity_id = activity['activityId']
-            gs.download_tcx(activity_id, download_dir)
+            filetype = 'tcx'
+            path = os.path.join(download_dir, gs.filename(activity, filetype))
+            if os.path.exists(path):
+                print('Skipping {} (already exists)...'.format(path))
+                return
+            print('Downloading {}...'.format(path))
+            with file(path, "w") as f:
+                f.write(gs.download(activity, filetype))
 
 
 if __name__ == '__main__':
