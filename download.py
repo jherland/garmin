@@ -35,12 +35,6 @@ def file_exists_in_folder(filename, folder):
 
 class GarminScraper(object):
 
-    BASE_URL = "http://connect.garmin.com/en-US/signin"
-    GAUTH = "http://connect.garmin.com/gauth/hostname"
-    SSO = "https://sso.garmin.com/sso"
-    CSS = "https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.1-min.css"
-    REDIRECT = "https://connect.garmin.com/post-auth/login"
-    ACTIVITIES = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start=%s&limit=%s"
     ORIG_ZIP = "https://connect.garmin.com/proxy/download-service/files/activity/%s"
     TCX = "https://connect.garmin.com/proxy/activity-service-1.1/tcx/activity/%s?full=true"
     GPX = "https://connect.garmin.com/proxy/activity-service-1.1/gpx/activity/%s?full=true"
@@ -58,25 +52,31 @@ class GarminScraper(object):
         ]
 
     def login(self, password):
+        base_url = "http://connect.garmin.com/en-US/signin"
+        gauth_url = "http://connect.garmin.com/gauth/hostname"
+        sso_url = "https://sso.garmin.com/sso"
+        css_url = "https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.1-min.css"
+        redirect_url = "https://connect.garmin.com/post-auth/login"
+
         # First establish contact with Garmin and decipher the local host.
-        page = self.agent.open(self.BASE_URL)
+        page = self.agent.open(base_url)
         pattern = "\"\S+sso\.garmin\.com\S+\""
         script_url = re.search(pattern, page.get_data()).group()[1:-1]
         self.agent.open(script_url)
-        hostname_url = self.agent.open(self.GAUTH)
+        hostname_url = self.agent.open(gauth_url)
         hostname = json.loads(hostname_url.get_data())['host']
 
         # Package the full login GET request...
         data = {
-            'service': self.REDIRECT,
+            'service': redirect_url,
             'webhost': hostname,
-            'source': self.BASE_URL,
-            'redirectAfterAccountLoginUrl': self.REDIRECT,
-            'redirectAfterAccountCreationUrl': self.REDIRECT,
-            'gauthHost': self.SSO,
+            'source': base_url,
+            'redirectAfterAccountLoginUrl': redirect_url,
+            'redirectAfterAccountCreationUrl': redirect_url,
+            'gauthHost': sso_url,
             'locale': 'en_US',
             'id': 'gauth-widget',
-            'cssUrl': self.CSS,
+            'cssUrl': css_url,
             'clientId': 'GarminConnect',
             'rememberMeShown': 'true',
             'rememberMeChecked': 'false',
@@ -115,10 +115,12 @@ class GarminScraper(object):
         # In theory, we're in.
 
     def activities(self, outdir, increment=100, limit=None):
+        activities_url = "http://connect.garmin.com/proxy/activity-search-service-1.2/json/activities?start=%s&limit=%s"
+
         if limit and increment > limit:
             increment = limit
         currentIndex = 0
-        initUrl = self.ACTIVITIES % (currentIndex, increment)  # 100 activities seems a nice round number
+        initUrl = activities_url % (currentIndex, increment)  # 100 activities seems a nice round number
         try:
             response = self.agent.open(initUrl)
         except:
@@ -151,7 +153,7 @@ class GarminScraper(object):
 
             # We still have at least 1 activity.
             currentIndex += increment
-            url = self.ACTIVITIES % (currentIndex, increment)
+            url = activities_url % (currentIndex, increment)
             response = self.agent.open(url)
             search = json.loads(response.get_data())
 
