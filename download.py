@@ -148,6 +148,8 @@ class GarminStore(object):
             os.rename(path, self.path(filename))
 
     def read(self, filename):
+        if not filename in self:
+            raise KeyError(filename)
         with self.open(filename, 'r') as f:
             return f.read()
 
@@ -198,14 +200,31 @@ def main():
             username, local.basedir))
 
         for activity in remote.activities():
-            filetype = 'tcx'
-            filename = remote.filename(activity, filetype)
-            if filename in local:
-                print('Skipping {} (already exists)...'.format(filename))
-                continue
-            print('Downloading {}...'.format(filename))
-            with local.open(filename, 'w') as f:
-                f.write(remote.download(activity, filetype))
+            json_filename = remote.filename(activity, 'json')
+            remote_json = remote.download(activity, 'json')
+            try:
+                local_json = local.read(json_filename)
+            except KeyError:
+                local_json = None
+
+            # If JSON data is unchanged from previous download session, then we
+            # assume that any associated (same activity - different file types)
+            # previous downloads are unchanged as well
+            if local_json == remote_json:
+                print('Skipping {} (already exists)...'.format(json_filename))
+                unchanged = True
+            else:
+                print('Downloading {}...'.format(json_filename))
+                local.write(json_filename, remote_json)
+                unchanged = False
+
+            for filetype in set(remote.FileType.keys()) - {'json'}:
+                filename = remote.filename(activity, filetype)
+                if unchanged and filename in local:
+                    print('Skipping {} (already exists)...'.format(filename))
+                    continue
+                print('Downloading {}...'.format(filename))
+                local.write(filename, remote.download(activity, filetype))
 
 
 if __name__ == '__main__':
