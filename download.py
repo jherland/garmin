@@ -103,7 +103,13 @@ class GarminScraper(object):
         if callable(handler):
             return handler(activity)
         else:
-            return self.agent.open(handler.format(**activity)).get_data()
+            # Garmin gives HTTP 500 when the (.kml) file does not exist
+            try:
+                return self.agent.open(handler.format(**activity)).get_data()
+            except mechanize.HTTPError as e:
+                if int(e.code) == 500:
+                    raise KeyError('{}.{}'.format(
+                        activity['activityId'], filetype))
 
     @classmethod
     def filename(cls, activity, filetype):
@@ -224,7 +230,11 @@ def main():
                     print('Skipping {} (already exists)...'.format(filename))
                     continue
                 print('Downloading {}...'.format(filename))
-                local.write(filename, remote.download(activity, filetype))
+                try:
+                    local.write(filename, remote.download(activity, filetype))
+                except KeyError:
+                    print('Failed to download {}. Skipping!'.format(filename))
+                    continue
 
 
 if __name__ == '__main__':
