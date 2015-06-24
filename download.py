@@ -17,6 +17,7 @@ to be determined.
 
 from __future__ import print_function
 
+from contextlib import contextmanager
 import json
 import mechanize
 import os
@@ -110,6 +111,51 @@ class GarminScraper(object):
         return '{}.{}'.format(activity['activityId'], filetype)
 
 
+class GarminStore(object):
+
+    def __init__(self, where):
+        self.basedir = where
+
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
+
+    def path(self, filename):
+        assert os.sep not in filename
+        return os.path.join(self.basedir, filename)
+
+    def __contains__(self, filename):
+        return os.path.exists(self.path(filename))
+
+    @contextmanager
+    def open(self, filename, mode='r'):
+        if mode == 'r':
+            with open(self.path(filename), 'rb') as f:
+                yield f
+            return
+
+        assert mode == 'w'
+        # Write into tmp file; rename into place on success
+        path = self.path(filename) + '.tmp'
+        f = open(path, 'wb')
+        try:
+            yield f
+        except: # failure -> roll back
+            f.close()
+            os.remove(path)
+            raise
+        else: # success -> commit
+            f.close()
+            os.rename(path, self.path(filename))
+
+    def read(self, filename):
+        with self.open(filename, 'r') as f:
+            return f.read()
+
+    def write(self, filename, data):
+        with self.open(filename, 'w') as f:
+            f.write(data)
+
+
 def credentials_from_prompt():
     import getpass
     print("Please fill in your Garmin account credentials (NOT saved).")
@@ -144,25 +190,22 @@ def main():
         credentials = credentials_from_prompt()
 
     for username, password in credentials:
-        download_dir = os.path.join(args.output, username)
+        remote = GarminScraper(username)
+        remote.login(password)
+
+        local = GarminStore(os.path.join(args.output, username))
         print('Downloading from {}\'s Garmin account into {}/...'.format(
-            username, download_dir))
+            username, local.basedir))
 
-        gs = GarminScraper(username)
-        gs.login(password)
-
-        if not os.path.exists(download_dir):
-            os.makedirs(download_dir)
-
-        for activity in gs.activities():
+        for activity in remote.activities():
             filetype = 'tcx'
-            path = os.path.join(download_dir, gs.filename(activity, filetype))
-            if os.path.exists(path):
-                print('Skipping {} (already exists)...'.format(path))
-                return
-            print('Downloading {}...'.format(path))
-            with file(path, "w") as f:
-                f.write(gs.download(activity, filetype))
+            filename = remote.filename(activity, filetype)
+            if filename in local:
+                print('Skipping {} (already exists)...'.format(filename))
+                continue
+            print('Downloading {}...'.format(filename))
+            with local.open(filename, 'w') as f:
+                f.write(remote.download(activity, filetype))
 
 
 if __name__ == '__main__':
