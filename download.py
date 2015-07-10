@@ -103,13 +103,18 @@ class GarminScraper(object):
         if callable(handler):
             return handler(activity)
         else:
-            # Garmin gives HTTP 500 when the (.kml) file does not exist
+            # GC gives:
+            #  - HTTP 500 when the .kml file does not exist
+            #  - HTTP 404 when the .orig.zip file does not exist
             try:
                 return self.agent.open(handler.format(**activity)).get_data()
             except mechanize.HTTPError as e:
-                if int(e.code) == 500:
+                if (int(e.code), filetype) in [(404, 'orig.zip'),
+                                               (500, 'kml')]:
                     raise KeyError('{}.{}'.format(
                         activity['activityId'], filetype))
+                else:
+                    raise
 
     @classmethod
     def filename(cls, activity, filetype):
