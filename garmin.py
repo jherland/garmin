@@ -9,10 +9,21 @@ import os
 
 
 class Activity(object):
+
+    FileType = {
+        'json': '.json',
+        'orig': '.orig.zip',
+        'tcx': '.tcx',
+        'gpx': '.gpx',
+        'kml': '.kml',
+        'csv': '.csv',
+    }
+
     def __init__(self, json_path):
         self.json_path = json_path
         with open(self.json_path) as f:
             self.json = json.load(f)
+        assert os.path.basename(self.json_path) == self.filename('json')
 
     def __unicode__(self):
         return u'{} {} {}: {}'.format(
@@ -39,27 +50,21 @@ class Activity(object):
     def name(self):
         return self.json['activityName']
 
+    def filename(self, filetype):
+        return str(self.activityId) + self.FileType[filetype]
+
+    def path(self, filetype):
+        return os.path.join(os.path.dirname(self.json_path),
+                            self.filename(filetype))
+
 
 class GarminStore(object):
-
-    FileType = {
-        'json': '.json',
-        'orig': '.orig.zip',
-        'tcx': '.tcx',
-        'gpx': '.gpx',
-        'kml': '.kml',
-        'csv': '.csv',
-    }
 
     def __init__(self, where):
         self.basedir = where
 
         if not os.path.exists(self.basedir):
             os.makedirs(self.basedir)
-
-    @classmethod
-    def filename(cls, activityId, filetype):
-        return activityId + cls.FileType[filetype]
 
     def path(self, filename):
         assert os.sep not in filename
@@ -104,7 +109,7 @@ class GarminStore(object):
             if sorted:
                 filenames.sort()
             for fname in filenames:
-                if fname.endswith(self.FileType['json']):
+                if fname.endswith('.json'):
                     yield Activity(os.path.join(dirpath, fname))
 
 
