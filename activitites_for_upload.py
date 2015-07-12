@@ -52,6 +52,16 @@ def main():
         for s in s_only:
             print('   ', s)
 
+    # Prepare the last 25 from g_only for bulk upload to Strava.
+    def chunks(l, chunk_size):
+        for i in range(0, len(l), chunk_size):
+            yield l[i:i + chunk_size]
+
+    for chunk in chunks(list(reversed(g_only)), 25):
+        print('---')
+        print(' '.join(
+            '"' + os.path.abspath(a.path('tcx') + '"') for a in chunk))
+
 
 if __name__ == '__main__':
     main()
