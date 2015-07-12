@@ -81,16 +81,16 @@ class GarminStore(object):
         f = open(path, 'wb')
         try:
             yield f
-        except: # failure -> roll back
+        except:  # failure -> roll back
             f.close()
             os.remove(path)
             raise
-        else: # success -> commit
+        else:  # success -> commit
             f.close()
             os.rename(path, self.path(filename))
 
     def read(self, filename):
-        if not filename in self:
+        if filename not in self:
             raise KeyError(filename)
         with self.open(filename, 'r') as f:
             return f.read()
