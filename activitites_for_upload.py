@@ -18,6 +18,9 @@ def main():
     parser.add_argument(
         '-s', '--strava', default='./strava',
         help='Directory where Strava activities (.gpx files) are stored.')
+    parser.add_argument(
+        '-b', '--both', action='store_true',
+        help='List activities that appear both on Garmin and Strava.')
     args = parser.parse_args()
 
     s_acts = list(strava.walk_activities(args.strava, sorted=True))
@@ -37,8 +40,9 @@ def main():
 
     if both:
         print('Present on both Garmin and Strava ({}):'.format(len(both)))
-        for g, s in both:
-            print('   ', g, '/', s)
+        if args.both:
+            for g, s in both:
+                print('   ', g, '/', s)
     if g_only:
         print('Only on Garmin ({}):'.format(len(g_only)))
         for g in g_only:
