@@ -17,6 +17,7 @@ class Activity(object):
         'gpx': '.gpx',
         'kml': '.kml',
         'csv': '.csv',
+        'fit': '.fit',
     }
 
     def __init__(self, json_path):

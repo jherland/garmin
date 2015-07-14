@@ -21,6 +21,9 @@ def main():
     parser.add_argument(
         '-b', '--both', action='store_true',
         help='List activities that appear both on Garmin and Strava.')
+    parser.add_argument(
+        '-f', '--format', default='tcx',
+        help='Provide filenames for upload in this format (defaults to tcx).')
     args = parser.parse_args()
 
     s_acts = list(strava.walk_activities(args.strava, sorted=True))
@@ -60,7 +63,7 @@ def main():
     for chunk in chunks(list(reversed(g_only)), 25):
         print('---')
         print(' '.join(
-            '"' + os.path.abspath(a.path('tcx') + '"') for a in chunk))
+            '"' + os.path.abspath(a.path(args.format) + '"') for a in chunk))
 
 
 if __name__ == '__main__':
