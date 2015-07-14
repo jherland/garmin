@@ -107,6 +107,12 @@ class GarminStore(object):
     def walk(self, sorted=False):
         for dirpath, dirnames, filenames in os.walk(self.basedir):
             if sorted:
+                # Garmin's activity IDs (i.e. filenames) are usually - but not
+                # always - chronologically sorted. I suspect that if a device
+                # upload _multiple_ activities simultaneously, or multiple
+                # devices upload different activities out-of-order, then their
+                # activity ID will reflect the order in which GC loaded them,
+                # as opposed to the order in which they happened in real time.
                 filenames.sort()
             for fname in filenames:
                 if fname.endswith('.json'):

@@ -26,7 +26,7 @@ def main():
     s_acts = list(strava.walk_activities(args.strava, sorted=True))
     print('Found {} Strava activities in {}'.format(len(s_acts), args.strava))
     g_store = garmin.GarminStore(args.garmin)
-    g_acts = list(g_store.walk(sorted=True))
+    g_acts = list(sorted(g_store.walk(), key=lambda a: a.when))
     print('Found {} Garmin activities in {}'.format(len(g_acts), args.garmin))
 
     g_only, both, s_only = [], [], []
